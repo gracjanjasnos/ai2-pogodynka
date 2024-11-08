@@ -21,7 +21,7 @@ class Measurement
     #[ORM\Column(type: 'date')]
     private ?\DateTimeInterface $date = null;
 
-    #[ORM\Column(type: 'decimal', precision: 3, scale: 0)]
+    #[ORM\Column(type: 'decimal', precision: 3, scale: 1)]
     private ?float $celsius = null;
 
     public function getId(): ?int
