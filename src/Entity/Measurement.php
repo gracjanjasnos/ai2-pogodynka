@@ -3,8 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\MeasurementRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Location;
 
 #[ORM\Entity(repositoryClass: MeasurementRepository::class)]
 class Measurement
@@ -14,15 +14,15 @@ class Measurement
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Location::class, inversedBy: "measurements")]
+    #[ORM\ManyToOne(targetEntity: Location::class, inversedBy: 'measurements')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Location $location = null;
 
-    #[ORM\Column(type: 'date')]
+    #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTimeInterface $date = null;
 
-    #[ORM\Column(type: 'decimal', precision: 3, scale: 1)]
-    private ?float $celsius = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 3, scale: 1)]
+    private ?string $celsius = null; // Zmieniono typ na `string` dla zgodności z bazą danych
 
     public function getId(): ?int
     {
@@ -53,12 +53,12 @@ class Measurement
         return $this;
     }
 
-    public function getCelsius(): ?float
+    public function getCelsius(): ?string
     {
         return $this->celsius;
     }
 
-    public function setCelsius(float $celsius): static
+    public function setCelsius(string $celsius): static
     {
         $this->celsius = $celsius;
 
