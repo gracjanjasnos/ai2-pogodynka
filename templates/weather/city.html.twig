@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {# @var location \App\Entity\Location #}
-{# @var measurement \App\Entity\Measurement #}
+{# @var measurements \App\Entity\Measurement[] #}
 
 {% block title %}Weather in {{ location.city }}, {{ location.country }}{% endblock %}
 
@@ -14,7 +14,10 @@
             <li>No measurements available.</li>
         {% else %}
             {% for measurement in measurements %}
-                <li>{{ measurement.date|date('d.m.Y') }}: {{ measurement.celsius }}&deg;C</li>
+                <li>
+                    Date: {{ measurement.date|date('d.m.Y') }},
+                    Temperature: {{ measurement.celsius }}&deg;C
+                </li>
             {% endfor %}
         {% endif %}
     </ul>
