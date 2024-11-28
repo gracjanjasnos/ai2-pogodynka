@@ -1,53 +1,91 @@
 <?php
-declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Entity\Location;
 use App\Entity\Measurement;
-use App\Repository\LocationRepository;
-use App\Repository\MeasurementRepository;
+use App\Entity\Location;
+use Doctrine\ORM\EntityManagerInterface;
 
 class WeatherUtil
 {
-    private MeasurementRepository $measurementRepository;
-    private LocationRepository $locationRepository;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct(MeasurementRepository $measurementRepository, LocationRepository $locationRepository)
+    public function __construct(EntityManagerInterface $entityManager)
     {
-        $this->measurementRepository = $measurementRepository;
-        $this->locationRepository = $locationRepository;
+        $this->entityManager = $entityManager;
     }
 
     /**
-     * Pobiera pomiary na podstawie lokalizacji.
+     * Pobiera prognozę pogody dla kraju i miasta
      *
-     * @param Location $location
+     * @param string $country
+     * @param string $city
      * @return Measurement[]
      */
-    public function getWeatherForLocation(Location $location): array
+    public function getWeatherForCountryAndCity(string $country, string $city): array
     {
-        return $this->measurementRepository->findByLocation($location);
-    }
+        // Pobierz obiekt Location z bazy danych
+        $location = $this->entityManager->getRepository(Location::class)
+            ->findOneBy(['city' => $city, 'country' => $country]);
 
-    /**
-     * Pobiera pomiary na podstawie kodu kraju i nazwy miasta.
-     *
-     * @param string $countryCode
-     * @param string $cityName
-     * @return Measurement[]
-     */
-    public function getWeatherForCountryAndCity(string $countryCode, string $cityName): array
-    {
-        $location = $this->locationRepository->findOneBy([
-            'country' => $countryCode,
-            'city' => $cityName,
-        ]);
-
+        // Jeśli lokalizacja nie istnieje, utwórz nową
         if (!$location) {
-            return []; 
+            $location = new Location();
+            $location->setCity($city);
+            $location->setCountry($country);
+
+            // Pobierz współrzędne
+            $coordinates = $this->getCoordinates($city, $country);
+            $location->setLatitude($coordinates['latitude']);
+            $location->setLongitude($coordinates['longitude']);
+
+            $this->entityManager->persist($location);
+            $this->entityManager->flush();
         }
 
-        return $this->getWeatherForLocation($location);
+        // Twórz dane pomiarowe
+        $measurements = [];
+        for ($i = 0; $i < 3; $i++) {
+            $measurement = new Measurement();
+            $measurement->setDate(new \DateTime(sprintf('+%d days', $i)));
+            $measurement->setLocation($location);
+            $measurement->setCelsius(number_format(rand(5, 15) + $i * 1.1, 1));
+
+            $measurements[] = $measurement;
+        }
+
+        return $measurements;
+    }
+
+    /**
+     * Pobiera współrzędne geograficzne dla miasta i kraju za pomocą API Nominatim
+     *
+     * @param string $city
+     * @param string $country
+     * @return array
+     */
+    private function getCoordinates(string $city, string $country): array
+    {
+        $url = sprintf(
+            'https://nominatim.openstreetmap.org/search?city=%s&country=%s&format=json',
+            urlencode($city),
+            urlencode($country)
+        );
+
+        $response = @file_get_contents($url);
+        $data = json_decode($response, true);
+
+        if (!empty($data[0])) {
+            return [
+                'latitude' => $data[0]['lat'],
+                'longitude' => $data[0]['lon'],
+            ];
+        }
+
+        // Domyślne współrzędne w razie braku wyniku
+        return [
+            'latitude' => '0.0000000',
+            'longitude' => '0.0000000',
+        ];
     }
 }

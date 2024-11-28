@@ -34,23 +34,21 @@ class Location
     )]
     private ?string $country = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 7)]
-    #[Assert\NotBlank(message: 'Latitude cannot be blank.')]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 7, nullable: true)]
     #[Assert\Range(
         min: -90,
         max: 90,
         notInRangeMessage: 'Latitude must be between -90 and 90.'
     )]
-    private ?string $latitude = null; // Zmieniono typ na `string` dla zgodności z bazą danych
+    private ?string $latitude = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 7)]
-    #[Assert\NotBlank(message: 'Longitude cannot be blank.')]
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 7, nullable: true)]
     #[Assert\Range(
         min: -180,
         max: 180,
         notInRangeMessage: 'Longitude must be between -180 and 180.'
     )]
-    private ?string $longitude = null; // Zmieniono typ na `string` dla zgodności z bazą danych
+    private ?string $longitude = null;
 
     #[ORM\OneToMany(mappedBy: 'location', targetEntity: Measurement::class)]
     private Collection $measurements;
@@ -94,7 +92,7 @@ class Location
         return $this->latitude;
     }
 
-    public function setLatitude(string $latitude): static
+    public function setLatitude(?string $latitude): static
     {
         $this->latitude = $latitude;
 
@@ -106,7 +104,7 @@ class Location
         return $this->longitude;
     }
 
-    public function setLongitude(string $longitude): static
+    public function setLongitude(?string $longitude): static
     {
         $this->longitude = $longitude;
 
@@ -131,7 +129,6 @@ class Location
     public function removeMeasurement(Measurement $measurement): static
     {
         if ($this->measurements->removeElement($measurement)) {
-            // set the owning side to null (unless already changed)
             if ($measurement->getLocation() === $this) {
                 $measurement->setLocation(null);
             }

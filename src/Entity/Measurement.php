@@ -22,7 +22,7 @@ class Measurement
     private ?\DateTimeInterface $date = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 3, scale: 1)]
-    private ?string $celsius = null; // Zmieniono typ na `string` dla zgodności z bazą danych
+    private ?string $celsius = null; 
 
     public function getId(): ?int
     {
@@ -64,4 +64,14 @@ class Measurement
 
         return $this;
     }
+
+    public function getFahrenheit(): ?float
+    {
+        if ($this->celsius === null) {
+            return null;
+        }
+
+        return round(($this->getCelsius() * 9 / 5) + 32, 1);
+    }
+
 }
